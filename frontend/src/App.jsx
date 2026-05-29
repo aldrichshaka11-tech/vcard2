@@ -1,0 +1,141 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import { useAuth } from './api/useAuth'
+
+const Home = lazy(() => import('./pages/Home'))
+const Login = lazy(() => import('./pages/Login'))
+const Register = lazy(() => import('./pages/Register'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const EditorPublicCard = lazy(() => import('./pages/EditorPublicCard'))
+const ProfileEditor = lazy(() => import('./editor/ProfileEditor'))
+
+const Pricing = lazy(() => import('./pages/Pricing'))
+const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'))
+const PaymentCancel = lazy(() => import('./pages/PaymentCancel'))
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'))
+const AdminUsers = lazy(() => import('./pages/AdminUsers'))
+const AdminRequests = lazy(() => import('./pages/AdminRequests'))
+const Templates = lazy(() => import('./pages/Templates'))
+
+const Spinner = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+  </div>
+)
+
+function GuestRoute({ children }) {
+  const { user, loading } = useAuth()
+  const token = localStorage.getItem('token')
+
+  if (!token) return children
+
+  // Check JWT expiry
+  try {
+    if (!token || token === 'undefined') return children
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      return children
+    }
+  } catch (e) {
+    console.error("Token parse error", e)
+  }
+
+  if (loading) return <Spinner />
+  if (!user) return children
+  return <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace />
+}
+
+function PlanRoute({ children }) {
+  const { loading, user, isAdmin } = useAuth()
+  const token = localStorage.getItem('token')
+
+  if (!token) return <Navigate to="/login" replace />
+  if (loading) return <Spinner />
+  if (isAdmin()) return children
+  if (user?.plan_status !== 'active') return <Navigate to="/pricing" replace />
+  return children
+}
+
+function PrivateRoute({ children }) {
+  const { loading, user } = useAuth()
+  const token = localStorage.getItem('token')
+
+  if (!token) return <Navigate to="/login" replace />
+
+  // Check JWT expiry
+  try {
+    if (!token || token === 'undefined') return <Navigate to="/login" replace />
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      return <Navigate to="/login" replace />
+    }
+  } catch (e) {
+    console.error("Token parse error", e)
+  }
+
+  if (loading) return <Spinner />
+
+  return children
+}
+
+function AdminRoute({ children }) {
+  const { loading, user } = useAuth()
+  const token = localStorage.getItem('token')
+
+  if (!token) return <Navigate to="/login" replace />
+  if (loading) return <Spinner />
+  // Check localStorage user as fallback during loading
+  let cachedRole = user?.role
+  if (!cachedRole) {
+    try {
+      const u = localStorage.getItem('user')
+      if (u && u !== 'undefined') cachedRole = JSON.parse(u)?.role
+    } catch {}
+  }
+  
+  if (cachedRole !== 'admin') return <Navigate to="/dashboard" replace />
+
+  return children
+}
+
+function UserRoute({ children }) {
+  const { loading, user } = useAuth()
+  const token = localStorage.getItem('token')
+
+  if (!token) return <Navigate to="/login" replace />
+  if (loading) return <Spinner />
+  // Admin can access all user routes too
+  return children
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Suspense fallback={<Spinner />}>
+        <Routes>
+          <Route path="/login"     element={<GuestRoute><Login /></GuestRoute>} />
+          <Route path="/register"  element={<GuestRoute><Register /></GuestRoute>} />
+          <Route path="/dashboard" element={<UserRoute><Dashboard /></UserRoute>} />
+          <Route path="/editor"    element={<PlanRoute><ProfileEditor /></PlanRoute>} />
+          <Route path="/upgrade"   element={<Navigate to="/pricing" replace />} />
+          <Route path="/pricing"   element={<Pricing />} />
+          {/* Payment pages — no auth guard; user may arrive from PhonePe redirect */}
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/cancel"  element={<PaymentCancel />} />
+          <Route path="/admin"     element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+          <Route path="/admin/requests" element={<AdminRoute><AdminRequests /></AdminRoute>} />
+          <Route path="/templates" element={<UserRoute><Templates /></UserRoute>} />
+          <Route path="/card/id/:cardId" element={<EditorPublicCard />} />
+          <Route path="/card/:slug" element={<EditorPublicCard />} />
+          <Route path="/"          element={<Home />} />
+          <Route path="/:slug"     element={<EditorPublicCard />} />
+        </Routes>
+      </Suspense>
+    </BrowserRouter>
+  )
+}
