@@ -451,7 +451,13 @@ export default function ProfileEditor() {
     business.forEach(key => { socialData[key] = linkByType(key) })
 
     // Construct full URLs for images
-    const constructImageUrl = (filename) => filename ? `${uploadsBase}${filename}` : ''
+    const constructImageUrl = (filename) => {
+      if (!filename) return ''
+      if (filename.startsWith('http')) return filename
+      const cleanFile = filename.includes('uploads/') ? filename.split('uploads/').pop() : filename
+      const finalFile = cleanFile.startsWith('/') ? cleanFile.substring(1) : cleanFile
+      return `${uploadsBase}${finalFile}`
+    }
     
     // Restore saved layout (coverHeight, profileSize, logoSize, etc.)
     const savedLayoutRaw = metaByType('meta_layout')

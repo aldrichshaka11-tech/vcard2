@@ -206,7 +206,9 @@ export default function EditorPublicCard() {
   const getImageUrl = (filename) => {
     if (!filename) return ''
     if (filename.startsWith('http')) return filename // Already full URL
-    return `${uploadsBase}${filename}` // Construct full URL
+    const cleanFile = filename.includes('uploads/') ? filename.split('uploads/').pop() : filename
+    const finalFile = cleanFile.startsWith('/') ? cleanFile.substring(1) : cleanFile
+    return `${uploadsBase}${finalFile}` // Construct full URL
   }
 
   const profilePhotoUrl = getImageUrl(profileFile || card.photo)

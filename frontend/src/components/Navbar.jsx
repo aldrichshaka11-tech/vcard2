@@ -14,6 +14,14 @@ export default function Navbar() {
     ? '/uploads/'
     : 'http://localhost:8000/uploads/'
 
+  const getAvatarUrl = (avatar) => {
+    if (!avatar) return ''
+    if (avatar.startsWith('http')) return avatar
+    const cleanAvatar = avatar.includes('uploads/') ? avatar.split('uploads/').pop() : avatar
+    const finalAvatar = cleanAvatar.startsWith('/') ? cleanAvatar.substring(1) : cleanAvatar
+    return `${uploadsBase}${finalAvatar}`
+  }
+
   const logout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
@@ -74,7 +82,7 @@ export default function Navbar() {
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-indigo-50 transition-all duration-200 cursor-default">
               {user.avatar ? (
                 <img 
-                  src={user.avatar.startsWith('http') ? user.avatar : `${uploadsBase}${user.avatar}`} 
+                  src={getAvatarUrl(user.avatar)} 
                   alt={user.name} 
                   className="w-6 h-6 rounded-full object-cover shadow-sm"
                 />
@@ -142,7 +150,7 @@ export default function Navbar() {
                 <div className="flex items-center gap-2">
                   {user.avatar ? (
                     <img 
-                      src={user.avatar.startsWith('http') ? user.avatar : `${uploadsBase}${user.avatar}`} 
+                      src={getAvatarUrl(user.avatar)} 
                       alt={user.name} 
                       className="w-7 h-7 rounded-full object-cover shadow-sm"
                     />

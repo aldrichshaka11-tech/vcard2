@@ -85,7 +85,9 @@ export default function CardPreview({ card = {}, editable = false, onLayoutChang
   const getImageUrl = (filename) => {
     if (!filename) return ''
     if (filename.startsWith('http')) return filename
-    return `${uploadsBase}${filename}`
+    const cleanFile = filename.includes('uploads/') ? filename.split('uploads/').pop() : filename
+    const finalFile = cleanFile.startsWith('/') ? cleanFile.substring(1) : cleanFile
+    return `${uploadsBase}${finalFile}`
   }
 
   const profilePhotoUrl = getImageUrl(metaByType('meta_profile') || card.photo)

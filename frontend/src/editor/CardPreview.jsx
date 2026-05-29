@@ -72,9 +72,11 @@ export default function CardPreview({ card = {}, editable = false, onLayoutChang
   const bgStyle = (() => {
     if (card.virtualBg?.enabled) {
       if (card.virtualBg.custom) {
-        const bgUrl = card.virtualBg.custom.startsWith('http') || card.virtualBg.custom.startsWith('data:') || card.virtualBg.custom.startsWith('blob:')
-          ? card.virtualBg.custom
-          : `${uploadsBase}${card.virtualBg.custom}`
+        const customBg = card.virtualBg.custom
+        const isFullUrl = customBg.startsWith('http') || customBg.startsWith('data:') || customBg.startsWith('blob:')
+        const cleanBg = !isFullUrl && customBg.includes('uploads/') ? customBg.split('uploads/').pop() : customBg
+        const finalBg = !isFullUrl && cleanBg.startsWith('/') ? cleanBg.substring(1) : cleanBg
+        const bgUrl = isFullUrl ? customBg : `${uploadsBase}${finalBg}`
         return {
           backgroundImage: `url(${bgUrl})`,
           backgroundSize: '100% 100%',

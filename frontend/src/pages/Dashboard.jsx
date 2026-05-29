@@ -41,12 +41,20 @@ export default function Dashboard() {
     ? '/uploads/'
     : 'http://localhost:8000/uploads/'
 
+  const getAvatarUrl = (avatar) => {
+    if (!avatar) return ''
+    if (avatar.startsWith('http')) return avatar
+    const cleanAvatar = avatar.includes('uploads/') ? avatar.split('uploads/').pop() : avatar
+    const finalAvatar = cleanAvatar.startsWith('/') ? cleanAvatar.substring(1) : cleanAvatar
+    return `${uploadsBase}${finalAvatar}`
+  }
+
   useEffect(() => {
     if (showEditProfile && user) {
       setProfileName(user.name || '')
       setProfileEmail(user.email || '')
       setAvatarFile(null)
-      setAvatarPreview(user.avatar ? (user.avatar.startsWith('http') ? user.avatar : `${uploadsBase}${user.avatar}`) : '')
+      setAvatarPreview(getAvatarUrl(user.avatar))
       setProfileError('')
       setProfileSuccess(false)
     }
@@ -464,7 +472,7 @@ export default function Dashboard() {
               <div className="flex items-center gap-2.5 px-3 py-1.5 bg-white border border-gray-100/80 rounded-xl shadow-sm cursor-default">
                 {user?.avatar ? (
                   <img 
-                    src={user.avatar.startsWith('http') ? user.avatar : `${uploadsBase}${user.avatar}`} 
+                    src={getAvatarUrl(user.avatar)} 
                     alt={user.name} 
                     className="w-7 h-7 rounded-full object-cover shadow-md"
                   />
@@ -798,7 +806,7 @@ export default function Dashboard() {
                       <div className="w-full h-full rounded-full overflow-hidden bg-white flex items-center justify-center text-indigo-600 font-extrabold text-2xl border border-white shadow-inner">
                         {user?.avatar ? (
                           <img 
-                            src={user.avatar.startsWith('http') ? user.avatar : `${uploadsBase}${user.avatar}`} 
+                            src={getAvatarUrl(user.avatar)} 
                             alt={user.name} 
                             className="w-full h-full object-cover"
                           />
