@@ -171,7 +171,7 @@ export default function Dashboard() {
   const hasPlan = isAdmin() || user?.plan_status === 'active'
 
   const createNewCard = async () => {
-    if (!hasPlan) { navigate('/pricing'); return }
+    // Bypassing payment restriction to open Editor directly
     setCreating(true)
     try {
       const res = await api.post('/cards', { title: `Business Card ${cards.length + 1}`, company: '', bio: '', photo: '', theme: 'default' })
@@ -609,7 +609,7 @@ export default function Dashboard() {
                     
                     <div className="flex items-center gap-1">
                       <Link 
-                        to={hasPlan && selectedCard ? `/editor?cardId=${selectedCard.id}` : '/pricing'} 
+                        to={selectedCard ? `/editor?cardId=${selectedCard.id}` : '/editor'} 
                         className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-[#7c3aed] hover:bg-purple-50 border border-transparent hover:border-purple-100 rounded-lg transition-all"
                       >
                         <Pencil size={11} /> Edit
@@ -853,7 +853,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   {/* EDIT CARD */}
                   <Link 
-                    to={hasPlan && selectedCard ? `/editor?cardId=${selectedCard.id}` : '/pricing'}
+                    to={selectedCard ? `/editor?cardId=${selectedCard.id}` : '/editor'}
                     className="relative bg-[#f5effc] border border-[#ebdff8] p-5 rounded-[24px] flex flex-col items-center justify-center text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] cursor-pointer"
                   >
                     <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-sm relative">

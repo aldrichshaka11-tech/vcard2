@@ -11,6 +11,7 @@ import Navbar from '../components/Navbar'
 import QRModal from '../components/QRModal'
 import api from '../api/axios'
 import { useAuth, FEATURES } from '../api/useAuth'
+import BillingModal from '../components/BillingModal'
 
 const FIELD_METADATA = {
   name: {
@@ -284,7 +285,49 @@ export default function ProfileEditor() {
   const [serverCardId, setServerCardId] = useState(null)
   const { getFeatureLimit, canAccessFeature, user, loading: authLoading, isAdmin } = useAuth()
   const navigate = useNavigate()
-  
+
+  const [showBilling, setShowBilling] = useState(false)
+  const hasPlan = isAdmin() || user?.plan_status === 'active'
+  const checkPremium = (actionName, actionCallback) => {
+    if (hasPlan) {
+      actionCallback()
+    } else {
+      localStorage.setItem('pending_action', actionName)
+      if (serverCardId) {
+        localStorage.setItem('pending_card_id', serverCardId)
+      }
+      setShowBilling(true)
+    }
+  }
+
+  useEffect(() => {
+    if (authLoading) return
+    if (!user) return
+    if (!serverCardId) return
+    const pendingAction = localStorage.getItem('pending_action')
+    if (pendingAction && hasPlan) {
+      localStorage.removeItem('pending_action')
+      localStorage.removeItem('pending_card_id')
+      setTimeout(() => {
+        if (pendingAction === 'save') {
+          saveToBackend()
+        } else if (pendingAction === 'copy') {
+          shareLink()
+        } else if (pendingAction === 'png') {
+          exportPNG()
+        } else if (pendingAction === 'email') {
+          shareEmail()
+        } else if (pendingAction === 'whatsapp') {
+          shareWhatsApp()
+        } else if (pendingAction === 'view') {
+          window.open(getShareUrl(), '_blank', 'noopener,noreferrer')
+        } else if (pendingAction === 'qr') {
+          setShowQR(true)
+        }
+      }, 800)
+    }
+  }, [user, authLoading, hasPlan, serverCardId])
+
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('editor')
 
@@ -964,39 +1007,39 @@ export default function ProfileEditor() {
               <span className="hidden sm:inline">Reset</span>
             </button>
             <button
-              onClick={() => window.open(getShareUrl(), '_blank', 'noopener,noreferrer')}
+              onClick={() => checkPremium('view', () => window.open(getShareUrl(), '_blank', 'noopener,noreferrer'))}
               className="hidden sm:flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 border border-transparent hover:border-indigo-200 transition-all"
             >
               <Eye size={12} className="sm:text-base" />
               <span className="hidden sm:inline">View Card</span>
             </button>
             <button
-              onClick={shareLink}
+              onClick={() => checkPremium('copy', shareLink)}
               className="hidden md:flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-gray-600 hover:bg-blue-50 hover:text-blue-600 border border-transparent hover:border-blue-200 transition-all"
             >
               <Share2 size={12} className="sm:text-base" />
               <span className="hidden sm:inline">Copy Link</span>
             </button>
             <button
-              onClick={shareWhatsApp}
+              onClick={() => checkPremium('whatsapp', shareWhatsApp)}
               className="hidden lg:flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-gray-600 hover:bg-green-50 hover:text-green-600 border border-transparent hover:border-green-200 transition-all"
             >
               <span className="hidden sm:inline">WhatsApp</span>
             </button>
             <button
-              onClick={shareEmail}
+              onClick={() => checkPremium('email', shareEmail)}
               className="hidden lg:flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 border border-transparent hover:border-indigo-200 transition-all"
             >
               <span className="hidden sm:inline">Email</span>
             </button>
             <button
-              onClick={() => setShowQR(true)}
+              onClick={() => checkPremium('qr', () => setShowQR(true))}
               className="hidden md:flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-gray-600 hover:bg-violet-50 hover:text-violet-600 border border-transparent hover:border-violet-200 transition-all"
             >
               <span className="hidden sm:inline">QR PNG</span>
             </button>
             <button
-              onClick={saveToBackend}
+              onClick={() => checkPremium('save', saveToBackend)}
               disabled={saving}
               className="btn-primary flex items-center gap-1.5 text-xs sm:text-sm py-1.5 sm:py-2 px-3 sm:px-4"
             >
@@ -1209,7 +1252,7 @@ export default function ProfileEditor() {
                     </button>
                   ) : (
                     <button
-                      onClick={saveToBackend}
+                      onClick={() => checkPremium('save', saveToBackend)}
                       disabled={saving}
                       className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-green-600 hover:bg-green-700 text-white transition-all disabled:opacity-60"
                     >
@@ -1239,6 +1282,12 @@ export default function ProfileEditor() {
         cardId={serverCardId}
         userName={card.name}
         onClose={() => setShowQR(false)}
+      />
+    )}
+
+    {showBilling && (
+      <BillingModal
+        onClose={() => setShowBilling(false)}
       />
     )}
 

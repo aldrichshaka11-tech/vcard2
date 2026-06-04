@@ -120,7 +120,7 @@ export default function App() {
           <Route path="/login"     element={<GuestRoute><Login /></GuestRoute>} />
           <Route path="/register"  element={<GuestRoute><Register /></GuestRoute>} />
           <Route path="/dashboard" element={<UserRoute><Dashboard /></UserRoute>} />
-          <Route path="/editor"    element={<PlanRoute><ProfileEditor /></PlanRoute>} />
+          <Route path="/editor"    element={<PrivateRoute><ProfileEditor /></PrivateRoute>} />
           <Route path="/upgrade"   element={<Navigate to="/pricing" replace />} />
           <Route path="/pricing"   element={<Pricing />} />
           {/* Payment pages — no auth guard; user may arrive from PhonePe redirect */}

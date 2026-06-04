@@ -108,9 +108,7 @@ function ImageUpload({ label, icon, value, onChange, round }) {
 }
 
 export default function VisualPanel({ card, update, updateNested }) {
-  const { getFeatureLimit } = useAuth()
-  const maxColors = getFeatureLimit(FEATURES.THEME_COLORS)
-  const allowedColors = maxColors === -1 ? THEME_COLORS : THEME_COLORS.slice(0, maxColors)
+  const allowedColors = THEME_COLORS
   
   return (
     <div className="space-y-5">
@@ -133,7 +131,7 @@ export default function VisualPanel({ card, update, updateNested }) {
       {/* Theme color */}
       <div className="bg-white rounded-2xl border-2 border-slate-100 p-4 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all">
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2">
-          <Palette size={14} className="text-indigo-400" /> Theme Color {maxColors !== -1 && <span className="text-xs text-gray-400">({maxColors} colors available)</span>}
+          <Palette size={14} className="text-indigo-400" /> Theme Color
         </p>
         <div className="grid grid-cols-10 gap-2 mb-3">
           {allowedColors.map(color => (
@@ -146,46 +144,7 @@ export default function VisualPanel({ card, update, updateNested }) {
               {card.themeColor === color && <Check size={12} className="text-white" />}
             </button>
           ))}
-          {maxColors !== -1 && THEME_COLORS.slice(maxColors).map(color => (
-            <div
-              key={color}
-              className="w-7 h-7 rounded-lg opacity-30 relative cursor-pointer group"
-              style={{ background: color }}
-              title="Premium color - Upgrade to unlock"
-              onClick={() => {
-                // Navigate to pricing page when clicking locked colors
-                window.location.href = '/pricing'
-              }}
-            >
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-3 h-3 bg-white rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <span className="text-[8px] text-gray-600">🔒</span>
-                </div>
-              </div>
-              <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                Premium Color
-              </div>
-            </div>
-          ))}
         </div>
-        
-        {/* Premium upgrade message for free users */}
-        {maxColors !== -1 && (
-          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-3 mb-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold text-purple-700">Unlock More Colors</p>
-                <p className="text-xs text-purple-600 mt-1">Get {THEME_COLORS.length - maxColors} additional colors with premium</p>
-              </div>
-              <button 
-                onClick={() => window.location.href = '/pricing'}
-                className="px-3 py-1.5 bg-purple-600 text-white text-xs font-medium rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                Upgrade
-              </button>
-            </div>
-          </div>
-        )}
         
         <FeatureGate feature={FEATURES.CUSTOM_COLORS}>
           <div className="flex items-center gap-2">

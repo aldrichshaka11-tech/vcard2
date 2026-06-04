@@ -95,6 +95,15 @@ export default function PaymentSuccess() {
           setStatus('success')
           // Refresh user data in localStorage so JWT stays valid — NO LOGOUT
           await refreshUserAndRedirect()
+          
+          // Auto-return to editor if user was in middle of editing
+          const pendingAction = localStorage.getItem('pending_action')
+          const pendingCardId = localStorage.getItem('pending_card_id')
+          if (pendingAction) {
+            setTimeout(() => {
+              navigate(`/editor?cardId=${pendingCardId || ''}`)
+            }, 2000)
+          }
         } else if (payment.status === 'failed') {
           setStatus('failed')
         } else if (attempt < 8) {
@@ -189,10 +198,18 @@ export default function PaymentSuccess() {
               </div>
 
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => {
+                  const pendingAction = localStorage.getItem('pending_action')
+                  const pendingCardId = localStorage.getItem('pending_card_id')
+                  if (pendingAction) {
+                    navigate(`/editor?cardId=${pendingCardId || ''}`)
+                  } else {
+                    navigate('/dashboard')
+                  }
+                }}
                 className="w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-[#c14f3e] to-[#e06b5a] hover:from-[#a63d2f] hover:to-[#c14f3e] text-white font-bold rounded-2xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
               >
-                Go to Dashboard <ArrowRight size={16} />
+                {localStorage.getItem('pending_action') ? 'Return to Editor' : 'Go to Dashboard'} <ArrowRight size={16} />
               </button>
             </div>
           </>
